@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MallapiApplication<mallapi>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "org.zerock.mallapi.MallapiApplication",
+            "projectName": "mallapi",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
