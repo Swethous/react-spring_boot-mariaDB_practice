@@ -13,6 +13,13 @@ const TodoRead = lazy(() => import("./pages/todo/ReadPage"));
 const TodoAdd = lazy(() => import("./pages/todo/AddPage"));
 const TodoModify = lazy(() => import("./pages/todo/ModifyPage"));
 
+const ProductsIndex = lazy(() => import("./pages/products/IndexPage"));
+const ProductsList  = lazy(() => import("./pages/products/ListPage"));
+const ProductsAdd  = lazy(() => import("./pages/products/AddPage"));
+const ProductRead = lazy(() => import("./pages/products/ReadPage"));
+const ProductModify = lazy(() => import("./pages/products/ModifyPage"));
+
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -56,6 +63,32 @@ const router = createBrowserRouter([
       }
     ]
   },
+  {
+    path: "products",
+    element:  <Suspense fallback={Loading}><ProductsIndex /></Suspense>,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="list" replace />
+      },
+      {
+        path: "list",
+        element: <Suspense fallback={Loading}><ProductsList /></Suspense>
+      },
+      {
+        path: "add",
+        element: <Suspense fallback={Loading}><ProductsAdd /></Suspense>
+      },     
+      {
+        path: "read/:pno",
+        element: <Suspense fallback={Loading}><ProductRead /></Suspense>
+      },
+      {
+        path: "modify/:pno",
+        element: <Suspense fallback={Loading}><ProductModify /></Suspense>
+      },
+    ]
+  }
 ]);
 
 createRoot(document.getElementById('root')!).render(
