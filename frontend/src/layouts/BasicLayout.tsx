@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import BasicMenu from "../components/menus/BasicMenu";
+import CartComponent from "../components/menus/CartComponent";
 
 type BasicLayoutProps = {
     children: ReactNode;
@@ -18,7 +19,7 @@ const BasicLayout = ({ children }: BasicLayoutProps) => {
         </main>
 
         <aside className="bg-green-300 md:w-1/5 lg:w-1/4 px-5">
-          <h1 className="text-2xl md:text-4xl">Sidebar</h1>
+          <CartComponent/>
         </aside>
       </div>
     </>

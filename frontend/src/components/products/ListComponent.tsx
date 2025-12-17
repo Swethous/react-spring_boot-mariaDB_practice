@@ -5,7 +5,7 @@ import FetchingModal from "../common/FetchingModal";
 import type { Product } from "../../types/product";
 import type { PageResponse } from "../../types/common";
 import PageComponent from "../common/PageComponent";
-
+import useCustomLogin from "../../hooks/useCustomLogin";
 
 const initState: PageResponse<Product> = {
   dtoList: [],
@@ -23,6 +23,8 @@ const initState: PageResponse<Product> = {
 
 const ListComponent = () => {
 
+  const {exceptionHandel} = useCustomLogin()
+
   const { page, size, refresh, moveToList, moveToProductRead } = useCustomMove();
 
   // serverData는 나중에 사용
@@ -38,7 +40,7 @@ const ListComponent = () => {
       console.log(data);
       setServerData(data);
       setFetching(false);
-    });
+    }).catch(err=>exceptionHandel(err));
 
   }, [page, size, refresh]);
 
