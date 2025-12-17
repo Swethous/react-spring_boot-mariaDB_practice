@@ -3,12 +3,12 @@ import { getOne } from "../../api/productsApi";
 import useCustomMove from "../../hooks/useCustomMove";
 import type { Product } from "../../types/product";
 import FetchingModal from "../common/FetchingModal";
+import useCustomCart from "../../hooks/useCustomCart";
+import useCustomLogin from "../../hooks/useCustomLogin";
 
 type ReadComponentProps = {
     pno: number
 }
-
-
 
 const initState: Product = {
     pno:0,
@@ -25,6 +25,23 @@ const ReadComponent = ({pno}:ReadComponentProps) => {
     const {moveToProductList, moveToProductModify} = useCustomMove()
     const [fetching, setFetching] = useState(false)
 
+    const {changeCart, cartItems} = useCustomCart()
+    const {loginState} = useCustomLogin()
+
+    const handleClickAddCart = () => {
+        let qty = 1
+
+        const addedItem = cartItems.filter(item => item.pno === pno)[0]
+
+        if(addedItem) {
+            if(window.confirm("이미 추가된 상품입니다. 추가하시겠습니까?") === false) {
+                return
+            }
+            qty = addedItem.qty + 1
+        }
+        changeCart({email: loginState.email!, pno:pno, qty:qty})
+    }
+
     useEffect(() => {
         setFetching(true)
         getOne(pno).then(data => {
@@ -33,6 +50,15 @@ const ReadComponent = ({pno}:ReadComponentProps) => {
             setFetching(false)
         })
     },[pno])
+
+    // const { isFetching, data } = useQuery (
+    //     ['products', pno],
+    //     () => getOne(pno),
+    //     {
+    //         staleTime: 1000 * 10,
+    //         retry:1
+    //     }
+    // )
 
     return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
@@ -93,6 +119,13 @@ const ReadComponent = ({pno}:ReadComponentProps) => {
 
         {/* Buttons */}
         <div className="flex justify-end p-4">
+        <button
+            type="button"
+            className="inline-block rounded p-4 m-2 text-xl w-32 text-white bg-green-500"
+            onClick={() => handleClickAddCart()}
+        >
+            Add Cart
+        </button>
         <button
             type="button"
             className="inline-block rounded p-4 m-2 text-xl w-32 text-white bg-red-500"
