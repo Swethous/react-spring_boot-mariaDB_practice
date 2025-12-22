@@ -4,6 +4,7 @@ import FetchingModal from "../common/FetchingModal";
 import type { Product } from "../../types/product";
 import useCustomMove from "../../hooks/useCustomMove";
 import ResultModal from "../common/ResultModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type ModifyComponentProps = {
   pno: number;
@@ -21,21 +22,40 @@ const initState: Product = {
 const ModifyComponent = ({pno}: ModifyComponentProps) => {
     const [product, setProduct] = useState(initState)
 
-    const [fetching, setFetching] = useState(false)
+    // const [fetching, setFetching] = useState(false)
 
-    const[result, setResult] = useState<string | null>(null)
+    // const[result, setResult] = useState<string | null>(null)
 
     const{moveToProductRead, moveToProductList} = useCustomMove()
 
     const uploadRef = useRef<HTMLInputElement | null >(null)
 
+    // useEffect(() => {
+    //     setFetching(true)
+    //     getOne(pno).then((data) => {
+    //         setProduct(data)
+    //         setFetching(false);
+    //     })
+    // }, [pno])
+
+    const { data, isFetching, isSuccess } = useQuery<Product>({
+    queryKey: ['products', pno],
+    queryFn: () => getOne(pno),
+    staleTime: Infinity,
+    enabled: pno > 0,
+    })
+
     useEffect(() => {
-        setFetching(true)
-        getOne(pno).then((data) => {
-            setProduct(data)
-            setFetching(false);
-        })
-    }, [pno])
+    if (isSuccess && data) {
+        setProduct(data) // 초기값 세팅
+    }
+    }, [isSuccess, data])
+
+    const delMutation = useMutation({
+    mutationFn: (pno: number) => deleteOne(pno)})
+    const queryClient = useQueryClient()
+
+
 
     const handleChangeProduct = (e:ChangeEvent<HTMLInputElement| HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -48,11 +68,7 @@ const ModifyComponent = ({pno}: ModifyComponentProps) => {
         }))
     }
     const handleClickDelete = () => {
-        setFetching(true)
-        deleteOne(pno).then (data => {
-            setResult("Deleted")
-            setFetching(false)
-        })
+        delMutation.mutate(pno)
     }
 
     const deleteOldImages = (imageName: string) => {
@@ -62,6 +78,12 @@ const ModifyComponent = ({pno}: ModifyComponentProps) => {
 
         setProduct({...product})
     }
+
+    const modMutation = useMutation({
+        mutationFn: (formdata: FormData)=> putOne(pno, formdata)
+
+
+    })
 
     const handleClickModify = () => {
         const files = uploadRef.current?.files
@@ -79,27 +101,38 @@ const ModifyComponent = ({pno}: ModifyComponentProps) => {
         for ( let i =0; i < product.uploadFileNames.length ; i++) {
             formData.append("uploadFileNames", product.uploadFileNames[i])
         }
-        setFetching(true)
 
-        putOne(pno, formData).then (data => {
-            setResult('Modified')
-            setFetching(false)
-        })
+        modMutation.mutate(formData)
     }
 
     const closeModal = () => {
-            if(result === 'Modified') {
-                moveToProductRead(pno)
-            } else if (result === 'Deleted') {
-                moveToProductList({page:1})
-            }
-            setResult(null)
+        if(delMutation.isSuccess) {
+            queryClient.invalidateQueries({queryKey:['products' , pno]})
+            queryClient.invalidateQueries({queryKey:['products/list']})
+            moveToProductList()
+        }
+        if(modMutation.isSuccess) {
+            queryClient.invalidateQueries({queryKey:['products' , pno]})
+            queryClient.invalidateQueries({queryKey:['products/list']})
+            moveToProductRead(pno)
+        }
     }
 
     return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
 
-        {fetching && <FetchingModal />}
+        {(isFetching|| delMutation.isPending || modMutation.isPending) && <FetchingModal/>}
+
+        { delMutation.isSuccess || modMutation.isSuccess ? 
+            <ResultModal
+            title={`처리결과`}
+            content={'정상적으로 처리되었습니다.'}
+            callbackFn={closeModal}
+            />
+            : <></>
+        }
+
+        {/* {fetching && <FetchingModal />}
 
         {result?
             <ResultModal
@@ -108,7 +141,7 @@ const ModifyComponent = ({pno}: ModifyComponentProps) => {
             callbackFn={closeModal}
             />
             : <></>
-        }
+        } */}
 
         {/* Product Name */}
         <div className="flex justify-center">
