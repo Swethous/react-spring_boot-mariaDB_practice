@@ -6,6 +6,7 @@ import type { Product } from "../../types/product";
 import type { PageResponse } from "../../types/common";
 import PageComponent from "../common/PageComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const initState: PageResponse<Product> = {
   dtoList: [],
@@ -23,33 +24,55 @@ const initState: PageResponse<Product> = {
 
 const ListComponent = () => {
 
-  const {exceptionHandel} = useCustomLogin()
+  const {moveToLoginReturn} = useCustomLogin()
 
-  const { page, size, refresh, moveToList, moveToProductRead } = useCustomMove();
+  const { page, size, refresh, moveToProductList, moveToProductRead } = useCustomMove();
 
   // serverData는 나중에 사용
-  const [serverData, setServerData] = useState(initState);
+  // const [serverData, setServerData] = useState(initState);
 
   // for FetchingModal
-  const [fetching, setFetching] = useState(false);
+  // const [fetching, setFetching] = useState(false);
 
-  useEffect(() => {
-    setFetching(true);
+  // useEffect(() => {
+  //   setFetching(true);
 
-    getList({ page, size }).then(data => {
-      console.log(data);
-      setServerData(data);
-      setFetching(false);
-    }).catch(err=>exceptionHandel(err));
+  //   getList({ page, size }).then(data => {
+  //     console.log(data);
+  //     setServerData(data);
+  //     setFetching(false);
+  //   }).catch(err=>exceptionHandel(err));
 
-  }, [page, size, refresh]);
+  // }, [page, size, refresh]);
+
+  const { data, isFetching, isError, error } = useQuery({
+    queryKey: ['products','list', page,size],
+    queryFn: () => getList({page,size}),
+    staleTime: 1000* 5,
+  })
+
+  const queryClient = useQueryClient()
+
+  const handleClickPage = (pageParam:any) => {
+    if(pageParam.page === page){
+      queryClient.invalidateQueries({queryKey: ['products','list']})
+    }
+    moveToProductList(pageParam)
+  }
+
+  if (isError) {
+    console.log(error)
+    return moveToLoginReturn()
+  }
+
+  const serverData = data || initState
 
     return (
     <div className="border-2 border-blue-100 mt-10 mr-2 ml-2">
-        {fetching ? <FetchingModal /> : <></>}
+        {isFetching ? <FetchingModal /> : <></>}
 
         <div className="flex flex-wrap mx-auto p-6">
-        {serverData.dtoList.map((product) => (
+        {serverData.dtoList.map((product:Product) => (
             <div
             key={product.pno}
             className="w-1/2 p-1 rounded shadow-md border-2 cursor-pointer"
@@ -84,7 +107,7 @@ const ListComponent = () => {
             </div>
         ))}
         </div>
-        <PageComponent serverData={serverData} movePage={moveToList}></PageComponent>
+        <PageComponent serverData={serverData} movePage={handleClickPage}></PageComponent>
     </div>
     );
 

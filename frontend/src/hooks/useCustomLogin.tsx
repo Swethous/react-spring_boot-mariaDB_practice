@@ -55,6 +55,7 @@ const useCustomLogin = () => {
     moveTopath,
     moveToLogin,
     moveToLoginReturn,
+    exceptionHandel,
   };
 };
 

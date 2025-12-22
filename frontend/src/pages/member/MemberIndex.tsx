@@ -1,7 +1,7 @@
 // src/pages/member/MemberLayout.tsx
 import { Outlet } from "react-router-dom";
 
-const MemberLayout = () => {
+const MemberIndex = () => {
   return (
     <div>
       <Outlet />
@@ -9,4 +9,4 @@ const MemberLayout = () => {
   );
 };
 
-export default MemberLayout;
+export default MemberIndex;

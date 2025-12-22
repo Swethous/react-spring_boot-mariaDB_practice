@@ -5,6 +5,7 @@ import type { Product } from "../../types/product";
 import FetchingModal from "../common/FetchingModal";
 import useCustomCart from "../../hooks/useCustomCart";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { useQuery } from "@tanstack/react-query";
 
 type ReadComponentProps = {
     pno: number
@@ -21,9 +22,9 @@ const initState: Product = {
 
 
 const ReadComponent = ({pno}:ReadComponentProps) => {
-    const[product, setProduct] = useState(initState)
+    // const[product, setProduct] = useState(initState)
     const {moveToProductList, moveToProductModify} = useCustomMove()
-    const [fetching, setFetching] = useState(false)
+    // const [fetching, setFetching] = useState(false)
 
     const {changeCart, cartItems} = useCustomCart()
     const {loginState} = useCustomLogin()
@@ -42,28 +43,29 @@ const ReadComponent = ({pno}:ReadComponentProps) => {
         changeCart({email: loginState.email!, pno:pno, qty:qty})
     }
 
-    useEffect(() => {
-        setFetching(true)
-        getOne(pno).then(data => {
+    // useEffect(() => {
+    //     setFetching(true)
+    //     getOne(pno).then(data => {
 
-            setProduct(data)
-            setFetching(false)
-        })
-    },[pno])
+    //         setProduct(data)
+    //         setFetching(false)
+    //     })
+    // },[pno])
 
-    // const { isFetching, data } = useQuery (
-    //     ['products', pno],
-    //     () => getOne(pno),
-    //     {
-    //         staleTime: 1000 * 10,
-    //         retry:1
-    //     }
-    // )
+    const { data, isFetching, isError, error } = useQuery({
+    queryKey: ['products', pno],
+    queryFn: () => getOne(pno),
+    staleTime: 1000 * 10,
+    retry: 1,
+    enabled: !!pno,   // pno가 있을 때만 호출
+    })
+
+    const product = data|| initState
 
     return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
 
-        {fetching && <FetchingModal />}
+        {isFetching && <FetchingModal />}
 
         {/* PNO */}
         <div className="flex justify-center mt-10">
@@ -107,7 +109,7 @@ const ReadComponent = ({pno}:ReadComponentProps) => {
 
         {/* Images */}
         <div className="w-full flex flex-col items-center justify-center m-auto">
-        {product.uploadFileNames.map((imgFile, i) => (
+        {product.uploadFileNames.map((imgFile: string, i: number) => (
             <img
             key={i}
             alt="product"
